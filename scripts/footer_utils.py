@@ -29,7 +29,13 @@ _default_font_warned = False
 
 
 def _load_font(font_path: str, font_size: int) -> ImageFont.ImageFont:
-    """指定パスから TTF を読み込み、失敗時は PIL デフォルトフォントへフォールバック。"""
+    """指定パスから TTF を読み込み、失敗時は PIL デフォルトフォントへフォールバック。
+
+    フォールバック時も `font_size` を可能な限り反映する：Pillow 10.1+ は
+    `ImageFont.load_default(size)` をサポートし、内部の DejaVuSans を
+    指定サイズで返してくれる。これがないと 4K スライドでも 10px の極小
+    ウォーターマークになり、macOS 以外の環境で実質的に見えなくなる。
+    """
     global _default_font_warned
     try:
         return ImageFont.truetype(font_path, font_size)
@@ -37,10 +43,14 @@ def _load_font(font_path: str, font_size: int) -> ImageFont.ImageFont:
         if not _default_font_warned:
             sys.stderr.write(
                 f"[footer_utils] warning: font not found at {font_path}, "
-                f"using PIL default font\n"
+                f"using PIL default font (DejaVuSans) at {font_size}px\n"
             )
             _default_font_warned = True
-        return ImageFont.load_default()
+        try:
+            return ImageFont.load_default(font_size)
+        except TypeError:
+            # Pillow < 10.1: load_default は引数を取らない (固定 10px)
+            return ImageFont.load_default()
 
 
 def apply_footer(
