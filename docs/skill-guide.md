@@ -417,11 +417,21 @@ python regenerate_slide.py \
 
 ### プリセットの使い方
 
-既存のサンプルプリセットを使う場合:
+スキルが自動で実行する手順（`SKILL.md` Phase 1 と同じ）。`references/presets/.active_preset` にプリセット名が記録されていればそれを優先し、無ければ `example-preset.md` にフォールバックする。
 
 ```bash
-cp ${SKILL_DIR}/references/presets/example-preset.md ${SESSION_DIR}/design_guidelines.md
+ACTIVE_PRESET_FILE="${SKILL_DIR}/references/presets/.active_preset"
+if [ -f "${ACTIVE_PRESET_FILE}" ]; then
+  PRESET_NAME=$(cat "${ACTIVE_PRESET_FILE}")
+  PRESET_PATH="${SKILL_DIR}/references/presets/${PRESET_NAME}"
+  [ -f "${PRESET_PATH}" ] || PRESET_PATH="${SKILL_DIR}/references/presets/example-preset.md"
+else
+  PRESET_PATH="${SKILL_DIR}/references/presets/example-preset.md"
+fi
+cp "${PRESET_PATH}" "${SESSION_DIR}/design_guidelines.md"
 ```
+
+`.active_preset` は [design-setup](https://github.com/rsensui2/tekion-slide-generator/tree/main/design-setup) スキルが対話的に書き出すか、手動で `echo "my-brand.md" > references/presets/.active_preset` で設定できる。
 
 ### 新しいプリセットの作成
 

@@ -148,8 +148,20 @@ TIMESTAMP=$(date +%Y-%m-%d_%H%M) && OUTPUT_DIR="[指定された出力先]" && S
 テンプレート: `${SKILL_DIR}/references/design_guidelines_template.md`
 
 **プリセット使用時:**
+
+`design-setup` スキルでブランドを設定済みなら `references/presets/.active_preset` にプリセット名が記録されている。それを優先し、無ければ `example-preset.md` にフォールバックする。
+
 ```bash
-cp ${SKILL_DIR}/references/presets/example-preset.md ${SESSION_DIR}/design_guidelines.md
+ACTIVE_PRESET_FILE="${SKILL_DIR}/references/presets/.active_preset"
+if [ -f "${ACTIVE_PRESET_FILE}" ]; then
+  PRESET_NAME=$(cat "${ACTIVE_PRESET_FILE}")
+  PRESET_PATH="${SKILL_DIR}/references/presets/${PRESET_NAME}"
+  [ -f "${PRESET_PATH}" ] || PRESET_PATH="${SKILL_DIR}/references/presets/example-preset.md"
+else
+  PRESET_PATH="${SKILL_DIR}/references/presets/example-preset.md"
+fi
+cp "${PRESET_PATH}" "${SESSION_DIR}/design_guidelines.md"
+echo "Using preset: $(basename "${PRESET_PATH}")"
 ```
 
 **カスタム作成時** — テンプレート参照し以下を決定:
@@ -237,13 +249,23 @@ ${PYTHON} ${SKILL_DIR}/scripts/validate_slides_json.py --file ${SESSION_DIR}/jso
 
 ## Phase 3: プロンプト生成 + グラウンディングマップ
 
+`.active_style` ファイル（`design-setup` が書き出す）があればその値を `--style` に渡す。無ければ `balanced`。
+
 ```bash
+ACTIVE_STYLE_FILE="${SKILL_DIR}/references/presets/.active_style"
+if [ -f "${ACTIVE_STYLE_FILE}" ]; then
+  STYLE=$(cat "${ACTIVE_STYLE_FILE}")
+  [ -z "${STYLE}" ] && STYLE=balanced
+else
+  STYLE=balanced
+fi
+
 ${PYTHON} ${SKILL_DIR}/scripts/generate_prompts_from_json.py \
   --session-dir ${SESSION_DIR} \
   --json-file json/slides_plan.json \
   --output-dir prompts \
   --design-guidelines ${SESSION_DIR}/design_guidelines.md \
-  --style balanced \
+  --style "${STYLE}" \
   --image-size 2K
 ```
 
