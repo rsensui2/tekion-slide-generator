@@ -299,10 +299,20 @@ cp ~/Downloads/my-company-logo.png ~/.claude/skills/tekion-slide-generator-v4/as
 
 ### Step 2: デザインガイドラインを作成
 
-`references/presets/example-preset.md` を自社用にコピー＆カスタマイズ:
+**A) 対話で作る（推奨）** — [design-setup](design-setup/) コンパニオンスキルを使う：
+
+```
+Claude Code で「デザインを設定したい」と発話
+```
+
+ブランド名・ロゴ・配色・トーン等を 1 問ずつ対話で設定し、`references/presets/{slug}.md` を自動生成、`.active_preset` に記録して次回以降のスライド生成に自動適用する。
+
+**B) 手動でカスタマイズ** — サンプルプリセットを直接コピー：
 
 ```bash
 cp references/presets/example-preset.md references/presets/my-company.md
+# 編集後、活性化する
+echo "my-company.md" > references/presets/.active_preset
 ```
 
 カスタマイズすべき項目:
